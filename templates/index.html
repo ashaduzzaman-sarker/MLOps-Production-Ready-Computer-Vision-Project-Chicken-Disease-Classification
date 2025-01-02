@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chicken Disease Classification</title>
+    <link rel="shortcut icon" href="#"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .heading {
+            color: #343a40;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .image-container, .results-container {
+            border: 1px solid #ced4da;
+            border-radius: 10px;
+            padding: 20px;
+            background: #ffffff;
+        }
+
+        .results-container {
+            height: 320px;
+            overflow-y: auto;
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #343a40;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <div class="container">
+        <h1 class="text-center heading">Chicken Disease Classification</h1>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="image-container text-center">
+                    <h5>Upload Image</h5>
+                    <div class="mt-3">
+                        <img src="" id="photo" alt="Uploaded Image" class="img-fluid rounded" style="display:none; max-height: 300px;">
+                        <video autoplay id="video" poster="https://img.freepik.com/free-vector/group-young-people-posing-photo_52683-18824.jpg?size=338&ext=jpg" class="img-fluid rounded"></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-primary btn-sm" id="uload">Upload</button>
+                        <button class="btn btn-success btn-sm" id="send">Predict</button>
+                    </div>
+                    <input type="file" id="fileinput" style="display:none;">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="results-container">
+                    <h5 class="text-center">Prediction Results</h5>
+                    <div id="results" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#loading").hide();
+
+            $('#send').click(function () {
+                sendRequest(base_data);
+            });
+
+            $('#uload').click(function () {
+                $('#fileinput').trigger('click');
+            });
+
+            $("#fileinput").change(function () {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const url = e.target.result;
+                        const img = new Image();
+                        img.onload = function () {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.height = this.height;
+                            canvas.width = this.width;
+                            ctx.drawImage(this, 0, 0);
+                            base_data = canvas.toDataURL('image/jpeg', 1.0).replace(/^data:image.+;base64,/, '');
+                            canvas.remove();
+                        };
+                        img.src = url;
+                        $('#photo').attr('src', url).show();
+                        $('#video').hide();
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        });
+
+        function sendRequest(base64Data) {
+            if (base64Data) {
+                const url = "../predict";
+                $("#loading").show();
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ image: base64Data }),
+                    success: function (res) {
+                        $("#loading").hide();
+                        const resultsDiv = $("#results");
+                        resultsDiv.html("<pre>" + JSON.stringify(res, null, 2) + "</pre>");
+                    },
+                    error: function () {
+                        $("#loading").hide();
+                        alert("Error in prediction!");
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
