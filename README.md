@@ -13,6 +13,7 @@ This project is a production-ready MLOps pipeline for chicken disease classifica
 - **Dockerized Deployment**: Uses Docker for containerized application deployment.
 - **AWS Integration**: Supports deployment via AWS EC2 and ECR.
 
+![Chicken Disease Classification](images/web_app.PNG)
 
 ## Project Structure
 
